@@ -15,9 +15,9 @@ export default function DiscoverPage() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex h-[calc(100dvh-6.5rem)] flex-col overflow-hidden">
+    <div className="flex h-[calc(100dvh-6.5rem)] flex-col overflow-hidden overscroll-none touch-manipulation">
       <AppHeader />
-      <div className="relative z-0 min-h-0 flex-1">
+      <div className="relative z-0 min-h-0 flex-1 overscroll-none">
         <SwipeDeck
           onContribute={(b, m) => {
             setBill(b);
