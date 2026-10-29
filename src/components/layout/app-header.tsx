@@ -13,9 +13,10 @@ export function AppHeader({ title }: { title?: string }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const store = useDemoStore();
-  const unread = store.user
-    ? getUserNotifications().filter((n) => !n.read).length
-    : 0;
+  const unread =
+    mounted && store.user
+      ? getUserNotifications().filter((n) => !n.read).length
+      : 0;
 
   useEffect(() => setMounted(true), []);
 

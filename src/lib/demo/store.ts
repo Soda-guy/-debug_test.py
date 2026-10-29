@@ -259,7 +259,11 @@ export async function contributeToBill(opts: {
   idempotencyKey: string;
 }): Promise<{ ok: true; contribution: Contribution; fullyFunded: boolean } | { ok: false; error: string }> {
   const state = load();
-  if (!state.user) return { ok: false, error: "Sign in to contribute." };
+  // Demo convenience: ensure a session exists so confirm never silently no-ops
+  if (!state.user) {
+    state.user = defaultUser();
+    persist();
+  }
 
   // Idempotency
   const existing = state.contributions.find((c) => c.idempotencyKey === opts.idempotencyKey);

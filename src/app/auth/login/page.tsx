@@ -61,7 +61,19 @@ function LoginForm() {
             <p className="text-xs text-red-500">{form.formState.errors.password.message}</p>
           )}
         </div>
-        <Button type="submit" size="lg" className="w-full" disabled={loading}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={loading}
+          onClick={(e) => {
+            // Ensure demo login works even if native submit is intercepted
+            if (!form.formState.isSubmitting) {
+              e.preventDefault();
+              void form.handleSubmit(onSubmit)();
+            }
+          }}
+        >
           {loading ? "Signing in…" : "Sign in"}
         </Button>
       </form>

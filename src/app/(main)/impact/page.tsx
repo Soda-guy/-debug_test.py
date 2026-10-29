@@ -116,8 +116,8 @@ export default function ImpactPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-semibold">{bill?.statement.billerName ?? c.billId}</p>
-                      <p className="text-xs text-zinc-500">
-                        {new Date(c.createdAt).toLocaleString()} · {c.status}
+                      <p className="text-xs text-zinc-500" suppressHydrationWarning>
+                        {c.createdAt.slice(0, 10)} · {c.status}
                       </p>
                     </div>
                     <p className="font-bold text-rose-600">

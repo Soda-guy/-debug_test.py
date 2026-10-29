@@ -36,9 +36,17 @@ export function SwipeDeck({ onContribute }: SwipeDeckProps) {
     setDeck(getDiscoverFeed());
   }, []);
 
+  // Load once on mount; bill funding updates refresh amounts without reshuffling mid-swipe
   useEffect(() => {
     reload();
-  }, [reload, store.skippedBillIds.length, store.sessionSeenIds.length, store.bills]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    setDeck((prev) =>
+      prev.map((card) => store.bills.find((b) => b.id === card.id) ?? card)
+    );
+  }, [store.bills]);
 
   const current = deck[0];
   const next = deck[1];
@@ -82,11 +90,8 @@ export function SwipeDeck({ onContribute }: SwipeDeckProps) {
       setStamp(null);
       x.set(0);
       y.set(0);
-
-      if (action === "contribute") onContribute(bill, "partial");
-      if (action === "pay_all") onContribute(bill, "remaining");
     },
-    [onContribute, x, y]
+    [x, y]
   );
 
   const triggerExit = useCallback(
@@ -94,10 +99,13 @@ export function SwipeDeck({ onContribute }: SwipeDeckProps) {
       if (!current || exitDir) return;
       setExitDir(action);
       setStamp(action);
-      // Let animation play then advance
-      setTimeout(() => advance(action, current), 280);
+      // Open contribution immediately — don't wait on exit animation
+      if (action === "contribute") onContribute(current, "partial");
+      if (action === "pay_all") onContribute(current, "remaining");
+      const bill = current;
+      setTimeout(() => advance(action, bill), 280);
     },
-    [advance, current, exitDir]
+    [advance, current, exitDir, onContribute]
   );
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
@@ -151,10 +159,10 @@ export function SwipeDeck({ onContribute }: SwipeDeckProps) {
 
   return (
     <div className="relative flex h-full flex-col">
-      <div className="relative mx-auto w-full max-w-md flex-1 px-3 pb-2 pt-1">
+      <div className="relative mx-auto w-full max-w-md min-h-0 flex-1 overflow-hidden px-3 pb-2 pt-1">
         {/* Next card preview */}
         {next && (
-          <div className="absolute inset-x-3 top-3 bottom-2 scale-[0.96] opacity-60">
+          <div className="pointer-events-none absolute inset-x-3 top-3 bottom-2 scale-[0.96] opacity-60">
             <BillStatementCard bill={next} className="h-full" compact />
           </div>
         )}
@@ -162,7 +170,7 @@ export function SwipeDeck({ onContribute }: SwipeDeckProps) {
         <AnimatePresence>
           <motion.div
             key={current.id}
-            className="absolute inset-x-3 top-1 bottom-2 touch-none"
+            className="absolute inset-x-3 top-1 bottom-2 touch-none will-change-transform"
             style={{ x, y, rotate, opacity }}
             drag={!exitDir}
             dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
@@ -178,43 +186,68 @@ export function SwipeDeck({ onContribute }: SwipeDeckProps) {
         </AnimatePresence>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center justify-center gap-4 px-4 pb-3 pt-1">
+      {/* z-20: above cards, below bottom nav (z-40) and dialog portal (z-50) */}
+      <div className="relative z-20 flex shrink-0 items-center justify-center gap-4 bg-gradient-to-t from-white via-white to-transparent px-4 pb-5 pt-2 dark:from-zinc-950 dark:via-zinc-950">
         <Button
+          type="button"
           variant="skip"
           size="icon"
           aria-label="Skip bill"
-          onClick={() => triggerExit("skip")}
+          className="pointer-events-auto shadow-lg"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerExit("skip");
+          }}
           disabled={!!exitDir}
         >
           <X className="h-7 w-7" strokeWidth={2.5} />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="iconSm"
           aria-label={saved ? "Unsave bill" : "Save bill"}
           className={cn(
-            "border-2 border-zinc-200 dark:border-zinc-700",
+            "pointer-events-auto border-2 border-zinc-200 shadow-md dark:border-zinc-700",
             saved && "border-amber-400 text-amber-500"
           )}
-          onClick={() => setSaved(toggleSaveBill(current.id))}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setSaved(toggleSaveBill(current.id));
+          }}
         >
           <Bookmark className={cn("h-5 w-5", saved && "fill-amber-500")} />
         </Button>
         <Button
+          type="button"
           variant="super"
           size="iconSm"
           aria-label="Pay remaining balance"
-          onClick={() => triggerExit("pay_all")}
+          className="pointer-events-auto shadow-lg"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerExit("pay_all");
+          }}
           disabled={!!exitDir}
         >
           <Zap className="h-5 w-5" fill="currentColor" />
         </Button>
         <Button
+          type="button"
           variant="like"
           size="icon"
           aria-label="Contribute to bill"
-          onClick={() => triggerExit("contribute")}
+          data-testid="contribute-button"
+          className="pointer-events-auto shadow-lg"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!current || exitDir) return;
+            triggerExit("contribute");
+          }}
           disabled={!!exitDir}
         >
           <Heart className="h-7 w-7" fill="currentColor" />

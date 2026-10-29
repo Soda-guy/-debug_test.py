@@ -17,8 +17,8 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-200/80 bg-white/90 backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/90">
-      <ul className="mx-auto flex h-16 max-w-lg items-stretch justify-around px-1">
+    <nav className="safe-bottom pointer-events-none fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-200/80 bg-white/95 backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/95">
+      <ul className="pointer-events-auto mx-auto flex h-16 max-w-lg items-stretch justify-around px-1">
         {TABS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           const isPost = href === "/post";
